@@ -1,10 +1,7 @@
 #!/bin/bash
 
-# 更新并安装依赖 https://openwrt.org/docs/guide-developer/toolchain/install-buildsystem#debianubuntumint
 sudo apt update -y
-sudo apt install build-essential clang flex bison g++ gawk \
-    gcc-multilib g++-multilib gettext git libncurses5-dev libssl-dev \
-    python3-setuptools rsync swig unzip zlib1g-dev file wget
+sudo bash -c 'bash <(curl -sL https://build-scripts.immortalwrt.org/init_build_environment.sh)'
 sudo apt clean
 
 ROOT_DIR=$PWD
