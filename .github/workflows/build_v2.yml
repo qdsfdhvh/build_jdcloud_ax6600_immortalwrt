@@ -15,7 +15,7 @@ permissions: write-all
 jobs:
   build:
     name: Build JDCloud-AX6600 Immortalwrt
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout Projects
         uses: actions/checkout@main
@@ -34,98 +34,8 @@ jobs:
           echo "硬盘详情："
           df -Th
 
-      - name: Free Disk Space
-        uses: endersonmenezes/free-disk-space@main
-        with:
-          testing: false
-          remove_android: true
-          remove_dotnet: true
-          remove_haskell: true
-          remove_tool_cache: true
-          remove_swap: true
-          remove_packages:
-            "android* azure* clang* dotnet* firefox* ghc* golang* google* libclang* libgl1* lld* llvm* \
-            microsoft* mongodb* mono* mysql* nodejs* openjdk* php* postgresql* powershell* snap* temurin* yarn* zulu*"
-          remove_packages_one_command: true
-          remove_folders:
-            "/etc/apt/sources.list.d* /etc/mono* /etc/mysql* /usr/include/linux/android* /usr/lib/llvm* /usr/lib/mono* \
-            /usr/local/lib/android* /usr/local/lib/node_modules* /usr/local/share/chromium* /usr/local/share/powershell* \
-            /usr/local/share/vcpkg/ports/azure* /usr/local/share/vcpkg/ports/google* /usr/local/share/vcpkg/ports/libpq/android* \
-            /usr/local/share/vcpkg/ports/llvm* /usr/local/share/vcpkg/ports/mysql* /usr/local/share/vcpkg/ports/snap* \
-            /usr/share/azure* /usr/share/dotnet* /usr/share/glade* /usr/share/miniconda* /usr/share/php* /usr/share/swift \
-            /var/lib/mysql* /var/log/azure*"
-
-      - name: Initialization Environment
-        env:
-          DEBIAN_FRONTEND: noninteractive
-        run: |
-          docker rmi $(docker images -q)
-          sudo -E apt -yqq update
-          sudo -E apt -yqq full-upgrade
-          sudo -E apt -yqq autoremove --purge
-          sudo -E apt -yqq autoclean
-          sudo -E apt -yqq clean
-          sudo -E apt -yqq install dos2unix libfuse-dev
-          sudo bash -c 'bash <(curl -sL https://build-scripts.immortalwrt.org/init_build_environment.sh)'
-          sudo -E systemctl daemon-reload
-          sudo -E timedatectl set-timezone "Asia/Shanghai"
-
-      - name: Initialization Values
-        run: |
-          export WRT_DATE=$(TZ=UTC-8 date +"%y.%m.%d_%H.%M.%S")
-          export WRT_CI=$(basename $GITHUB_WORKSPACE)
-          export WRT_VER=$(echo $WRT_REPO | cut -d '/' -f 5-)-$WRT_BRANCH
-          export WRT_TYPE=$(sed -n "1{s/^#//;s/\r$//;p;q}" $GITHUB_WORKSPACE/Config/$WRT_TARGET.txt)
-
-          echo "WRT_DATE=$WRT_DATE" >> $GITHUB_ENV
-          echo "WRT_CI=$WRT_CI" >> $GITHUB_ENV
-          echo "WRT_VER=$WRT_VER" >> $GITHUB_ENV
-          echo "WRT_TYPE=$WRT_TYPE" >> $GITHUB_ENV
-
       - name: Build Firmware
         run: sh build.sh
-
-      # - name: Clone Code
-      #   run: |
-      #     git clone --depth=1 --single-branch --branch main https://github.com/VIKINGYFY/immortalwrt ./wrt/
-
-      #     cd ./wrt/ && echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
-
-      # - name: Check Scripts
-      #   run: |
-      #     find ./ -maxdepth 3 -type f -iregex ".*\(txt\|sh\)$" -exec dos2unix {} \; -exec chmod +x {} \;
-
-      # - name: Update Feeds
-      #   run: |
-      #     cd ./wrt/
-
-      #     ./scripts/feeds update -a
-      #     ./scripts/feeds install -a
-
-      # - name: Custom Packages
-      #   run: |
-      #     cd ./wrt/package/
-
-      #     $GITHUB_WORKSPACE/Scripts/Packages.sh
-      #     $GITHUB_WORKSPACE/Scripts/Handles.sh
-      
-      # - name: Copy .config
-      #   run: |
-      #     cd ./wrt/
-      #     cp -f $GITHUB_WORKSPACE/ax6600.config .config
-      #     make defconfig -j$(nproc)
-
-      # - name: Download Packages
-      #   run: |
-      #     cd ./wrt/
-
-      #     make download -j$(nproc)
-
-      # - name: Compile Firmware
-      #   run: |
-      #     cd ./wrt/
-
-      #     make -j$(nproc) V=s
 
       - name: Upload Firmware
         uses: actions/upload-artifact@v4
